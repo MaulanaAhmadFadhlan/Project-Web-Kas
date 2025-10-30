@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<style></style>
+.sidebar {
+    width: 250px;
+    min-height: 100vh;
+    background-color: #1d4ed8;
+    color: #fff;
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .sidebar h4 {
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  .sidebar a {
+    color: #fff;
+    text-decoration: none;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    transition: 0.3s;
+  }
+  .sidebar a:hover, .sidebar a.active {
+    background-color: #2563eb;
+  }
+  .sidebar a i {
+    margin-right: 10px;
+  }
+
+<div class="sidebar">
+    <div>
+      <h4>Kas RT</h4>
+      <a href="dashboard.html" class="active"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      <a href="anggota.html"><i class="bi bi-people"></i> Data Anggota</a>
+      <a href="pemasukan.html"><i class="bi bi-cash-stack"></i> Input Pemasukan</a>
+      <a href="pengeluaran.html"><i class="bi bi-cash"></i> Input Pengeluaran</a>
+      <a href="laporan.html"><i class="bi bi-file-earmark-text"></i> Laporan</a>
+      <a href="admin.html"><i class="bi bi-person-gear"></i> Manajemen Admin</a>
+    </div>
+    <form action="../../backend/admin/logout.php" method="POST">
+      <button type="submit" class="logout-btn w-100"><i class="bi bi-box-arrow-right"></i> Logout</button>
+    </form>
+  </div>
