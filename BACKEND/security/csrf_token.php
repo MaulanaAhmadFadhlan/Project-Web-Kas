@@ -1,0 +1,21 @@
+<?php
+session_start();
+
+function generate_csrf_token() {
+  if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+  }
+  return $_SESSION['csrf_token'];
+}
+
+function verify_csrf_token($token) {
+  if (!isset($_SESSION['csrf_token']) || $token !== $_SESSION['csrf_token']) {
+    return false;
+  }
+  return true;
+}
+
+// contoh penggunaan:
+// $token = generate_csrf_token();
+// if (!verify_csrf_token($_POST['csrf_token'])) die('Token tidak valid');
+?>

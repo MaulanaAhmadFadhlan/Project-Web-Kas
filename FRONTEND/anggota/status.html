@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Status Pembayaran - Kas RT</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f4f6f9;
+      font-family: 'Poppins', sans-serif;
+    }
+    .navbar {
+      background: linear-gradient(135deg, #00b09b, #96c93d);
+    }
+    .navbar-brand {
+      font-weight: 600;
+      color: white !important;
+    }
+    .card {
+      border: none;
+      border-radius: 15px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+    .status-badge {
+      border-radius: 50px;
+      padding: 6px 15px;
+      font-size: 0.9rem;
+    }
+    footer {
+      background: #00b09b;
+      color: white;
+      text-align: center;
+      padding: 10px;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg">
+    <div class="container">
+      <a class="navbar-brand" href="#">Kas RT</a>
+      <div class="d-flex">
+        <a href="dashboard.html" class="btn btn-light btn-sm me-2">Dashboard</a>
+        <a href="../../backend/anggota/logout_anggota.php" class="btn btn-outline-light btn-sm">Logout</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Konten Status Pembayaran -->
+  <div class="container my-5">
+    <div class="card p-4">
+      <h4 class="mb-4 text-center text-success fw-bold">Status Pembayaran Iuran</h4>
+      <div class="table-responsive">
+        <table class="table align-middle text-center table-hover">
+          <thead>
+            <tr>
+              <th>Bulan</th>
+              <th>Tahun</th>
+              <th>Jumlah Iuran (Rp)</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="statusTable">
+            <tr><td colspan="4" class="text-muted">Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2025 Kas RT - Sistem Keuangan RT</p>
+  </footer>
+
+  <script>
+    async function loadStatus() {
+      try {
+        const response = await fetch('../../backend/anggota/status_pembayaran.php');
+        const data = await response.json();
+
+        const tableBody = document.getElementById("statusTable");
+        tableBody.innerHTML = "";
+
+        if (!data || data.length === 0) {
+          tableBody.innerHTML = `<tr><td colspan="4" class="text-muted">Belum ada data pembayaran</td></tr>`;
+          return;
+        }
+
+        data.forEach(item => {
+          const statusBadge = item.status.toLowerCase() === "lunas"
+            ? `<span class="badge bg-success status-badge">Lunas</span>`
+            : `<span class="badge bg-danger status-badge">Belum Lunas</span>`;
+
+          const row = `
+            <tr>
+              <td>${item.bulan}</td>
+              <td>${item.tahun}</td>
+              <td>Rp ${Number(item.jumlah).toLocaleString("id-ID")}</td>
+              <td>${statusBadge}</td>
+            </tr>
+          `;
+          tableBody.innerHTML += row;
+        });
+      } catch (error) {
+        console.error("Gagal memuat data:", error);
+        document.getElementById("statusTable").innerHTML =
+          `<tr><td colspan="4" class="text-danger">Terjadi kesalahan saat memuat data</td></tr>`;
+      }
+    }
+
+    // Jalankan fungsi saat halaman dimuat
+    loadStatus();
+  </script>
+
+</body>
+</html>
