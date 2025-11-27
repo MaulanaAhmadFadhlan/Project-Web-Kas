@@ -1,90 +1,86 @@
 <?php
-require_once('../../helpers/koneksi.php');
-header('Content-Type: application/json; charset=utf-8');
+header("Content-Type: application/json");
+require_once("../helpers/koneksi.php");
 
-$method = $_SERVER['REQUEST_METHOD'];
+$action = $_GET['action'] ?? '';
 
-switch ($method) {
-  // ===================== [ GET DATA ] =====================
-  case 'GET':
-    $res = $conn->query("SELECT * FROM anggota ORDER BY id DESC");
-    $data = [];
-    while ($row = $res->fetch_assoc()) {
-      $data[] = $row;
-    }
-    echo json_encode(['success' => true, 'data' => $data]);
-    break;
+switch ($action) {
 
-  // ===================== [ TAMBAH DATA ] =====================
-  case 'POST':
-    $input = json_decode(file_get_contents("php://input"), true);
+    case 'getAll':
+        $query = mysqli_query($conn, "SELECT * FROM anggota ORDER BY id ASC");
+        if (!$query) {
+            echo json_encode(["status"=>"error","message"=>mysqli_error($conn)]);
+            exit;
+        }
+        $data = [];
+        while($row = mysqli_fetch_assoc($query)){
+            $data[] = $row;
+        }
+        echo json_encode(["status"=>"success","data"=>$data]);
+        break;
 
-    if (!$input || !isset($input['nama']) || !isset($input['username']) || !isset($input['password'])) {
-      echo json_encode(['success'=>false,'message'=>'Nama, Username, dan Password wajib diisi.']);
-      exit;
-    }
+    case 'insert':
+        $nama = mysqli_real_escape_string($conn, $_POST['nama'] ?? '');
+        $username = mysqli_real_escape_string($conn, $_POST['username'] ?? '');
+        $password = mysqli_real_escape_string($conn, $_POST['password'] ?? '');
+        $alamat = mysqli_real_escape_string($conn, $_POST['alamat'] ?? '');
+        $no_hp = mysqli_real_escape_string($conn, $_POST['no_hp'] ?? '');
 
-    $nama     = $conn->real_escape_string($input['nama']);
-    $username = $conn->real_escape_string($input['username']);
-    $password = $conn->real_escape_string($input['password']);
-    $alamat   = $conn->real_escape_string($input['alamat'] ?? '');
-    $no_hp    = $conn->real_escape_string($input['no_hp'] ?? '');
-    $added_by = $conn->real_escape_string($input['added_by'] ?? null);
+        if ($nama === '' || $username === '' || $password === '') {
+            echo json_encode(["status"=>"error","message"=>"Nama, username, dan password wajib diisi"]);
+            exit;
+        }
 
-    // insert ke database
-    $sql = "INSERT INTO anggota (nama, username, password, alamat, no_hp, added_by)
-            VALUES ('$nama', '$username', '$password', '$alamat', '$no_hp', " . ($added_by ? "'$added_by'" : "NULL") . ")";
+        $query = mysqli_query($conn, "INSERT INTO anggota (nama, username, password, alamat, no_hp)
+                                      VALUES ('$nama', '$username', '$password', '$alamat', '$no_hp')");
+        if (!$query) {
+            echo json_encode(["status"=>"error","message"=>mysqli_error($conn)]);
+            exit;
+        }
+        echo json_encode(["status"=>"success"]);
+        break;
 
-    if ($conn->query($sql)) {
-      echo json_encode(['success'=>true,'message'=>'Anggota baru berhasil ditambahkan.']);
-    } else {
-      echo json_encode(['success'=>false,'message'=>'Gagal menambah data: '.$conn->error]);
-    }
-    break;
+    case 'update':
+        $id = mysqli_real_escape_string($conn, $_POST['id'] ?? '');
+        $nama = mysqli_real_escape_string($conn, $_POST['nama'] ?? '');
+        $username = mysqli_real_escape_string($conn, $_POST['username'] ?? '');
+        $password = mysqli_real_escape_string($conn, $_POST['password'] ?? '');
+        $alamat = mysqli_real_escape_string($conn, $_POST['alamat'] ?? '');
+        $no_hp = mysqli_real_escape_string($conn, $_POST['no_hp'] ?? '');
 
-  // ===================== [ UPDATE DATA ] =====================
-  case 'PUT':
-    $input = json_decode(file_get_contents("php://input"), true);
+        if ($id === '' || $nama === '' || $username === '') {
+            echo json_encode(["status"=>"error","message"=>"ID, nama, dan username wajib diisi"]);
+            exit;
+        }
 
-    if (!isset($input['id'])) {
-      echo json_encode(['success'=>false,'message'=>'ID anggota wajib diisi.']);
-      exit;
-    }
+        $updateFields = "nama='$nama', username='$username', alamat='$alamat', no_hp='$no_hp'";
+        if($password !== ''){
+            $updateFields .= ", password='$password'";
+        }
 
-    $id       = (int)$input['id'];
-    $nama     = $conn->real_escape_string($input['nama']);
-    $username = $conn->real_escape_string($input['username']);
-    $password = $conn->real_escape_string($input['password']);
-    $alamat   = $conn->real_escape_string($input['alamat']);
-    $no_hp    = $conn->real_escape_string($input['no_hp']);
+        $query = mysqli_query($conn, "UPDATE anggota SET $updateFields WHERE id='$id'");
+        if (!$query) {
+            echo json_encode(["status"=>"error","message"=>mysqli_error($conn)]);
+            exit;
+        }
+        echo json_encode(["status"=>"success"]);
+        break;
 
-    $sql = "UPDATE anggota 
-            SET nama='$nama', username='$username', password='$password',
-                alamat='$alamat', no_hp='$no_hp'
-            WHERE id=$id";
+    case 'delete':
+        $id = mysqli_real_escape_string($conn, $_POST['id'] ?? '');
+        if ($id === '') {
+            echo json_encode(["status"=>"error","message"=>"ID wajib diisi"]);
+            exit;
+        }
+        $query = mysqli_query($conn, "DELETE FROM anggota WHERE id='$id'");
+        if (!$query) {
+            echo json_encode(["status"=>"error","message"=>mysqli_error($conn)]);
+            exit;
+        }
+        echo json_encode(["status"=>"success"]);
+        break;
 
-    if ($conn->query($sql)) {
-      echo json_encode(['success'=>true,'message'=>'Data anggota berhasil diperbarui.']);
-    } else {
-      echo json_encode(['success'=>false,'message'=>'Gagal memperbarui data: '.$conn->error]);
-    }
-    break;
-
-  // ===================== [ HAPUS DATA ] =====================
-  case 'DELETE':
-    parse_str(file_get_contents("php://input"), $_DEL);
-    $id = (int)($_DEL['id'] ?? 0);
-
-    if ($conn->query("DELETE FROM anggota WHERE id=$id")) {
-      echo json_encode(['success'=>true,'message'=>'Data anggota berhasil dihapus.']);
-    } else {
-      echo json_encode(['success'=>false,'message'=>'Gagal menghapus data: '.$conn->error]);
-    }
-    break;
-
-  // ===================== [ DEFAULT / INVALID METHOD ] =====================
-  default:
-    http_response_code(405);
-    echo json_encode(['success'=>false,'message'=>'Metode tidak diizinkan']);
+    default:
+        echo json_encode(["status"=>"error","message"=>"Invalid action"]);
 }
 ?>
